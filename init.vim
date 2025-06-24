@@ -108,15 +108,15 @@ colorscheme tokyonight-night
 lua << EOF
 
 vim.lsp.enable({
-	'lua_ls',
-	'gopls',
-	'jsonls',
-	'marksman',
-	'pyright',
-	'rust_analyzer',
-	'vtsls',
-	'vue_ls',
-	'yamlls',
+	'lua_ls', -- lua language server
+	'gopls', -- go language server
+	'jsonls', -- json language server
+	'marksman', -- markdown language server
+	'pyright', -- python language server
+	'rust_analyzer', -- rust language server
+	'vtsls', -- typescript language server
+	'vue_ls', -- vue language server
+	'yamlls', -- yaml language server
 })
 
 require('smear_cursor').enabled = true
