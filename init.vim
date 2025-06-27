@@ -133,7 +133,7 @@ require('neo-tree').setup({
 		},
 	},
 })
-
+vim.keymap.set('n', '<C-t>', '<Cmd>Neotree toggle<CR>')
 vim.keymap.set('n', '<leader>t', '<Cmd>Neotree focus<CR>')
 vim.keymap.set('n', '<leader>e', '<C-w>p') -- 현재 창에서 이전 창으로 이동
 
