@@ -12,8 +12,11 @@ Plug 'navarasu/onedark.nvim'
 " tokyonight theme
 Plug 'folke/tokyonight.nvim'
 
-" nerdtree
-Plug 'preservim/nerdtree'
+" neo-tree
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-tree/nvim-web-devicons'
+Plug 'MunifTanjim/nui.nvim'
+Plug 'nvim-neo-tree/neo-tree.nvim'
 
 " 자동완성
 Plug 'hrsh7th/nvim-cmp'
@@ -66,9 +69,6 @@ Plug 'stevearc/conform.nvim'
 Plug 'sphamba/smear-cursor.nvim'
 call plug#end()
 
-" nerdtree 설정
-map <C-t> :NERDTreeToggle<CR>
-
 " vim airline 설정
 let g:airline_powerline_fonts = 1        " powerline 폰트 사용
 let g:airline#extensions#tabline#enabled = 1    " 탭 라인 활성화
@@ -106,6 +106,37 @@ set colorcolumn=80
 colorscheme tokyonight-night
 
 lua << EOF
+-- neo tree 설정
+require('neo-tree').setup({
+	window = {
+		mappings = {
+			["P"] = {
+				"toggle_preview",
+				config = {
+					use_float = true,
+					title = "Preview",
+				},
+			},
+		},
+	},
+	filesystem = {
+		filtered_items = {
+			visible = true, -- 숨겨진 파일을 표시할지 여부
+			hide_dotfiles = true,
+			hide_gitignored = true,
+			hide_by_name = {
+				'.DS_Store',
+				'node_modules',
+				'__pycache__',
+				'.git',
+			},
+		},
+	},
+})
+
+vim.keymap.set('n', '<leader>t', '<Cmd>Neotree focus<CR>')
+vim.keymap.set('n', '<leader>e', '<C-w>p') -- 현재 창에서 이전 창으로 이동
+
 
 vim.lsp.enable({
 	'lua_ls', -- lua language server
