@@ -165,7 +165,24 @@ require('smear_cursor').setup{
 }
 
 -- git diff highlight
-require('gitsigns').setup()
+require('gitsigns').setup({
+	current_line_blame = true, -- 현재 라인에 대한 blame 정보 표시
+	current_line_blame_opts = {
+		delay = 500,
+	},
+	on_attach = function(bufnr)
+		local gitsigns = require('gitsigns')
+
+		local function map(mode, l, r, opts)
+			opts = opts or {}
+			opts.buffer = bufnr
+			vim.keymap.set(mode, l, r, opts)
+		end
+		
+		-- key mappings
+		map('n', '<leader>hp', gitsigns.preview_hunk, { buffer = bufnr, desc = 'Preview Hunk' })
+	end
+})
 
 vim.diagnostic.config({
   virtual_text = true,      -- 라인 옆에 에러 메시지 출력
