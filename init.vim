@@ -24,6 +24,9 @@ Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 
+" diff highlight
+Plug 'lewis6991/gitsigns.nvim'
+
 " add pictograms to lsp
 Plug 'onsails/lspkind.nvim'
 
@@ -160,6 +163,9 @@ require('smear_cursor').setup{
 	hide_target_hack = true,
     never_draw_over_target = true,
 }
+
+-- git diff highlight
+require('gitsigns').setup()
 
 vim.diagnostic.config({
   virtual_text = true,      -- 라인 옆에 에러 메시지 출력
