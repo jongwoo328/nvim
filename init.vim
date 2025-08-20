@@ -148,10 +148,27 @@ vim.lsp.enable({
 	'marksman', -- markdown language server
 	'pyright', -- python language server
 	'rust_analyzer', -- rust language server
-	'vtsls', -- typescript language server
-	'vue_ls', -- vue language server
 	'yamlls', -- yaml language server
 })
+vim.lsp.config('vtsls', {
+	settings = {
+		vtsls = {
+			tsserver = {
+				globalPlugins = {
+					{
+						name = '@vue/typescript-plugin',
+						location = '/opt/homebrew/bin/vue-language-server',
+						languages = { 'vue' },
+						configNamespace = 'typescript',
+					},
+				},
+			},
+		},
+	},
+	filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+})
+vim.lsp.enable({'vtsls', 'vue_ls'})
+
 
 require('smear_cursor').enabled = true
 require('smear_cursor').setup{
