@@ -294,32 +294,131 @@ vim.api.nvim_create_user_command('PeekOpen', require('peek').open, {})
 vim.api.nvim_create_user_command('PeekClose', require('peek').close, {})
 
 -- formatter
-require('conform').setup({
+local conform = require("conform")
+
+-- 프로젝트에 Prettier 설정/의존성이 존재하는지 검사
+local function project_has_prettier(dir)
+	-- 설정 파일 탐색
+	local cfg = vim.fs.find({
+		".prettierrc",
+		".prettierrc.json",
+		".prettierrc.yaml",
+		".prettierrc.yml",
+		".prettierrc.js",
+		".prettierrc.cjs",
+		".prettierrc.ts",
+		"prettier.config.js",
+		"prettier.config.cjs",
+		"prettier.config.ts",
+	}, { upward = true, path = dir })[1]
+	if cfg then return true end
+
+	-- package.json에 prettier 필드가 있는 경우
+	local pkg = vim.fs.find("package.json", { upward = true, path = dir })[1]
+	if pkg then
+		local ok, lines = pcall(vim.fn.readfile, pkg)
+		if ok and lines then
+			local content = table.concat(lines, "\n")
+			-- package.json에 prettier 설정이 있는 경우
+			if content:find([["prettier"%s*:]]) then
+				return true
+			end
+			-- dependency에 prettier가 있는 경우
+			if content:find([["prettier"%s*]]) then
+				return true
+			end
+		end
+	end
+
+	-- 로컬 바이너리 존재 (node_modules/.bin/prettier)
+	local bin = vim.fs.find("node_modules/.bin/prettier", { upward = true, path = dir })[1]
+	if bin then return true end
+
+	return false
+end
+
+-- 프로젝트에 Black 설정/의존성이 존재하는지 검사
+local function project_has_black(dir)
+	-- pyproject.toml의 [tool.black] 섹션
+	local pyproj = vim.fs.find("pyproject.toml", { upward = true, path = dir })[1]
+	if pyproj then
+		local ok, lines = pcall(vim.fn.readfile, pyproj)
+		if ok and lines then
+			local content = table.concat(lines, "\n"):lower()
+			if content:find("%[tool%.black%]") then
+				return true
+			end
+		end
+	end
+
+	local depfile = vim.fs.find({ "requirements.txt" }, { upward = true, path = dir })[1]
+	if depfile then
+		local ok, lines = pcall(vim.fn.readfile, depfile)
+		if ok and lines then
+			for _, line in ipairs(lines) do
+				local s = line:lower()
+				-- 주석이나 빈 줄은 무시
+				if not s:match("^%s*#") and s:match("%S") then
+					-- black, black==..., black>=..., black[...] 모두 catch
+					if s:match("^%s*black%s*$")               -- 그냥 black
+						or s:match("^%s*black%s*[%[%]=~<>]")  -- 버전/extra 포함
+					then
+						return true
+					end
+				end
+			end
+		end
+	end
+	return false
+end
+
+conform.setup({
 	formatters_by_ft = {
 		javascript = { "prettier" },
-		typescript = { "prettier" },
-		html = { "prettier" },
-		css = { "prettier" },
-		json = { "prettier" },
-		yaml = { "prettier" },
-		markdown = { "prettier" },
-		python = { "black" },
+		typescript  = { "prettier" },
+		html        = { "prettier" },
+		css         = { "prettier" },
+		json        = { "prettier" },
+		yaml        = { "prettier" },
+		markdown    = { "prettier" },
+		python      = { "black" },
 	},
-	format_on_save = {
-		lsp_format = "fallback",
-		timeout_ms = 500,
-	},
+	-- 자동포맷 (조건부)
+	format_on_save = function(bufnr)
+		local ft = vim.bo[bufnr].filetype
+		local dir = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":h")
+
+		if ft == "python" and not project_has_black(dir) then
+			return nil
+		end
+		if (ft == "javascript" or ft == "typescript" or ft == "html"
+			or ft == "css" or ft == "json" or ft == "yaml" or ft == "markdown")
+			and not project_has_prettier(dir) then
+			return nil
+		end
+
+		return {
+			lsp_format = "fallback",
+			timeout_ms = 500,
+		}
+	end,
 })
+
+-- 수동포맷 (항상 실행)
 vim.api.nvim_create_user_command("Format", function(args)
-  local range = nil
-  if args.count ~= -1 then
-    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
-    range = {
-      start = { args.line1, 0 },
-      ["end"] = { args.line2, end_line:len() },
-    }
-  end
-  require("conform").format({ async = true, lsp_format = "fallback", range = range })
+	local range = nil
+	if args.count ~= -1 then
+		local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+		range = {
+			start = { args.line1, 0 },
+			["end"] = { args.line2, end_line:len() },
+		}
+	end
+	require("conform").format({
+		async = true,
+		lsp_format = "fallback",
+		range = range,
+	})
 end, { range = true })
 
 EOF
